@@ -11,7 +11,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Inf Include="Tutorial_2_Simple_Driver.inf">
+    <Inf Include="Tutorial_5_IOCTL_Communication_SYS.inf">
       <Filter>Driver Files</Filter>
     </Inf>
   </ItemGroup>
