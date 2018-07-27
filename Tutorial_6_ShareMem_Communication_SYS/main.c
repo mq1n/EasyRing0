@@ -2,9 +2,9 @@
 #include <windef.h>
 #include "helper.h"
 
-const WCHAR sc_wszDeviceNameBuffer[]	= L"\\Device\\ShMem_Test";
-const WCHAR sc_wszDeviceSymLinkBuffer[] = L"\\DosDevices\\ShMem_Test";
-const WCHAR sc_wszSharedSectionName[]	= L"\\BaseNamedObjects\\SharedMemoryTest";
+const WCHAR gc_wszDeviceNameBuffer[]	= L"\\Device\\ShMem_Test";
+const WCHAR gc_wszDeviceSymLinkBuffer[] = L"\\DosDevices\\ShMem_Test";
+const WCHAR gc_wszSharedSectionName[]	= L"\\BaseNamedObjects\\SharedMemoryTest";
 
 PVOID	g_pSharedSection	= NULL;
 PVOID	g_pSectionObj		= NULL;
@@ -12,12 +12,33 @@ HANDLE	g_hSection			= NULL;
 
 //----------------------------------------------------------------------   
 
+VOID ReadSharedMemory()
+{
+	if (!g_hSection)
+		return;
+
+	if (g_pSharedSection)
+		ZwUnmapViewOfSection(NtCurrentProcess(), g_pSharedSection);
+
+	SIZE_T ulViewSize = 1024 * 10;
+	NTSTATUS ntStatus = ZwMapViewOfSection(g_hSection, NtCurrentProcess(), &g_pSharedSection, 0, ulViewSize, NULL, &ulViewSize, ViewShare, 0, PAGE_READWRITE | PAGE_NOCACHE);
+	if (ntStatus != STATUS_SUCCESS)
+	{
+		DbgPrint("ZwMapViewOfSection fail! Status: %p\n", ntStatus);
+		ZwClose(g_hSection);
+		return;
+	}
+	DbgPrint("ZwMapViewOfSection completed!\n");
+
+	DbgPrint("Shared memory read data: %s\n", (PCHAR)g_pSharedSection);
+}
+
 NTSTATUS CreateSharedMemory()
 {
 	NTSTATUS ntStatus = STATUS_UNSUCCESSFUL;
 
 	UNICODE_STRING uSectionName = { 0 };
-	RtlInitUnicodeString(&uSectionName, sc_wszSharedSectionName);
+	RtlInitUnicodeString(&uSectionName, gc_wszSharedSectionName);
 
 	OBJECT_ATTRIBUTES objAttributes = { 0 };
 	InitializeObjectAttributes(&objAttributes, &uSectionName, OBJ_CASE_INSENSITIVE, NULL, NULL);
@@ -57,6 +78,8 @@ NTSTATUS CreateSharedMemory()
 	if (ntStatus != STATUS_SUCCESS)
 	{
 		DbgPrint("GrantAccess fail! Status: %p\n", ntStatus);
+		ExFreePool(pACL);
+		ExFreePool(pSecurityDescriptor);
 		ObDereferenceObject(g_pSectionObj);
 		ZwClose(g_hSection);
 		return ntStatus;
@@ -75,28 +98,12 @@ NTSTATUS CreateSharedMemory()
 		return ntStatus;
 	}
 	DbgPrint("ZwMapViewOfSection completed!\n");
+
+	PCHAR TestString = "Message from kernel";
+	memcpy(g_pSharedSection, TestString, 19);
+	ReadSharedMemory();
+
 	return ntStatus;
-}
-
-VOID ReadSharedMemory()
-{
-	if (!g_hSection)
-		return;
-
-	if (g_pSharedSection)
-		ZwUnmapViewOfSection(NtCurrentProcess(), g_pSharedSection);
-
-	SIZE_T ulViewSize = 1024 * 10;
-	NTSTATUS ntStatus = ZwMapViewOfSection(g_hSection, NtCurrentProcess(), &g_pSharedSection, 0, ulViewSize, NULL, &ulViewSize, ViewShare, 0, PAGE_READWRITE | PAGE_NOCACHE);
-	if (ntStatus != STATUS_SUCCESS)
-	{
-		DbgPrint("ZwMapViewOfSection fail! Status: %p\n", ntStatus);
-		ZwClose(g_hSection);
-		return;
-	}
-	DbgPrint("ZwMapViewOfSection completed!\n");
-
-	DbgPrint("Shared memory read data: %s\n", (PCHAR)g_pSharedSection);
 }
 
 NTSTATUS OnIRPWrite(PDEVICE_OBJECT pDriverObject, PIRP pIrp)
@@ -152,7 +159,7 @@ VOID OnDriverUnload(IN PDRIVER_OBJECT pDriverObject)
 		ZwClose(g_hSection);
 
 	UNICODE_STRING symLink;
-	RtlInitUnicodeString(&symLink, sc_wszDeviceSymLinkBuffer);
+	RtlInitUnicodeString(&symLink, gc_wszDeviceSymLinkBuffer);
 
 	IoDeleteSymbolicLink(&symLink);
 	if (pDriverObject && pDriverObject->DeviceObject)
@@ -183,8 +190,8 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT pDriverObject, IN PUNICODE_STRING pRegist
 
 	// Normalize name and symbolic link.
 	UNICODE_STRING deviceNameUnicodeString, deviceSymLinkUnicodeString;
-	RtlInitUnicodeString(&deviceNameUnicodeString, sc_wszDeviceNameBuffer);
-	RtlInitUnicodeString(&deviceSymLinkUnicodeString, sc_wszDeviceSymLinkBuffer);
+	RtlInitUnicodeString(&deviceNameUnicodeString, gc_wszDeviceNameBuffer);
+	RtlInitUnicodeString(&deviceSymLinkUnicodeString, gc_wszDeviceSymLinkBuffer);
 
 	// Create the device.
 	PDEVICE_OBJECT pDeviceObject = NULL;
