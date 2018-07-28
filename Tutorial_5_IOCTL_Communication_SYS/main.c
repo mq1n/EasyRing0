@@ -120,7 +120,7 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT pDriverObject, IN PUNICODE_STRING pRegist
 
 	if (!pDriverObject)
 	{
-		DbgPrint("DispatchTestSys driver entry is null!\n");
+		DbgPrint("IoctlTestSys driver entry is null!\n");
 		return STATUS_FAILED_DRIVER_ENTRY;
 	}
 
@@ -143,7 +143,7 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT pDriverObject, IN PUNICODE_STRING pRegist
 	ntStatus = IoCreateDevice(pDriverObject, 0, &deviceNameUnicodeString, FILE_DEVICE_UNKNOWN, FILE_DEVICE_SECURE_OPEN, FALSE, &pDeviceObject);
 	if (ntStatus != STATUS_SUCCESS)
 	{
-		DbgPrint("DispatchTestSys IoCreateDevice fail! Status: %p\n", ntStatus);
+		DbgPrint("IoctlTestSys IoCreateDevice fail! Status: %p\n", ntStatus);
 		return ntStatus;
 	}
 
@@ -151,7 +151,7 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT pDriverObject, IN PUNICODE_STRING pRegist
 	ntStatus = IoCreateSymbolicLink(&deviceSymLinkUnicodeString, &deviceNameUnicodeString);
 	if (ntStatus != STATUS_SUCCESS)
 	{
-		DbgPrint("DispatchTestSys IoCreateSymbolicLink fail! Status: %p\n", ntStatus);
+		DbgPrint("IoctlTestSys IoCreateSymbolicLink fail! Status: %p\n", ntStatus);
 		return ntStatus;
 	}
 
@@ -162,7 +162,7 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT pDriverObject, IN PUNICODE_STRING pRegist
 	pDeviceObject->Flags |= DO_DIRECT_IO;
 	pDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
-	DbgPrint("DispatchTestSys driver entry completed!\n");
+	DbgPrint("IoctlTestSys driver entry completed!\n");
 
 	return STATUS_SUCCESS;
 }

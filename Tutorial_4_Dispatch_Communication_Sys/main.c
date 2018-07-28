@@ -116,7 +116,7 @@ NTSTATUS DriverEntry(IN PDRIVER_OBJECT pDriverObject, IN PUNICODE_STRING pRegist
 
 	pDeviceObject->Flags |= DO_BUFFERED_IO;
 
-	DbgPrint("DispatchTestSys driver entry completed!\n");
+	DbgPrint("Ioctl driver entry completed!\n");
 
 	return STATUS_SUCCESS;
 }
