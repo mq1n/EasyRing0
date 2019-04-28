@@ -177,7 +177,7 @@ NTSTATUS RtlSelfRelativeToAbsoluteSD2(PSECURITY_DESCRIPTOR pSelfRelativeSecurity
 
 NTSTATUS CreateStandardSCAndACL(OUT PSECURITY_DESCRIPTOR* SecurityDescriptor, OUT PACL* Acl)
 {
-	PSECURITY_DESCRIPTOR sd = ExAllocatePoolWithTag(PagedPool, sizeof(SECURITY_DESCRIPTOR), 'Tmhs');
+	PSECURITY_DESCRIPTOR sd = ExAllocatePoolWithTag(PagedPool, sizeof(SECURITY_DESCRIPTOR), 'SloV');
 	if (!sd)
 		return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -204,7 +204,7 @@ NTSTATUS CreateStandardSCAndACL(OUT PSECURITY_DESCRIPTOR* SecurityDescriptor, OU
 	pSystemSid->SubAuthority[0] = SECURITY_LOCAL_SYSTEM_RID;
 
 	ULONG ulACLLength = sizeof(ACL) + sizeof(ACCESS_ALLOWED_ACE) + RtlLengthSid(pAdminSid) - sizeof(ULONG) + sizeof(ACCESS_ALLOWED_ACE) + RtlLengthSid(pSystemSidBuffer) - sizeof(ULONG);
-	PACL pACL = ExAllocatePoolWithTag(PagedPool, ulACLLength, 'Tmhs');
+	PACL pACL = ExAllocatePoolWithTag(PagedPool, ulACLLength, 'SloV');
 	if (!pACL)
 	{
 		ExFreePool(sd);
@@ -261,7 +261,7 @@ NTSTATUS GrantAccess(HANDLE hSection, IN PACL StandardAcl)
 		return ntStatus;
 	}
 
-	PSECURITY_DESCRIPTOR sd = ExAllocatePoolWithTag(PagedPool, ulNeedSize, 'Tmhs');
+	PSECURITY_DESCRIPTOR sd = ExAllocatePoolWithTag(PagedPool, ulNeedSize, 'SloV');
 	if (!sd)
 	{
 		DbgPrint("ExAllocatePoolWithTag fail! Status: %p\n", ntStatus);
@@ -315,7 +315,7 @@ NTSTATUS GrantAccess(HANDLE hSection, IN PACL StandardAcl)
 	ntStatus = RtlSelfRelativeToAbsoluteSD2(sd, &sdLength2);
 	if (ntStatus == STATUS_BUFFER_TOO_SMALL)
 	{
-		PSECURITY_DESCRIPTOR sd2 = ExAllocatePoolWithTag(PagedPool, sdLength2, 'Tmhs');
+		PSECURITY_DESCRIPTOR sd2 = ExAllocatePoolWithTag(PagedPool, sdLength2, 'SloV');
 		if (!sd2)
 		{
 			ExFreePool(sd);
